@@ -1,0 +1,19 @@
+# Build outputs
+/build/
+/.gradle/
+/gradle/
+/gradlew
+/gradlew.bat
+/build.gradle.kts
+
+# IDE
+/.idea/
+*.iml
+*.ipr
+*.iws
+
+# Logs
+*.log
+/logs/
+
+mysql-data/
