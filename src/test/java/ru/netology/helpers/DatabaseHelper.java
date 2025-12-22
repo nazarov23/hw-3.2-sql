@@ -1,14 +1,15 @@
 package ru.netology.helpers;
 
 import lombok.SneakyThrows;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 public class DatabaseHelper {
     private static Connection connection;
+    private static QueryRunner runner = new QueryRunner();
 
     @SneakyThrows
     private static void initConnection() {
@@ -24,27 +25,31 @@ public class DatabaseHelper {
         String sql = "SELECT code FROM auth_codes " +
                 "WHERE user_id = (SELECT id FROM users WHERE login = ?) " +
                 "ORDER BY created DESC LIMIT 1";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, login);
-            ResultSet resultSet = statement.executeQuery();
-            return resultSet.next() ? resultSet.getString("code") : null;
-        }
+        return runner.query(connection, sql, new ScalarHandler<>(), login);
     }
 
     @SneakyThrows
     public static String getLastVerificationCode() {
         initConnection();
         String sql = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            ResultSet resultSet = statement.executeQuery();
-            return resultSet.next() ? resultSet.getString("code") : null;
-        }
+        return runner.query(connection, sql, new ScalarHandler<>());
     }
 
     @SneakyThrows
     public static void clearAuthCodes() {
         initConnection();
-        connection.createStatement().executeUpdate("DELETE FROM auth_codes");
+        runner.update(connection, "DELETE FROM auth_codes");
+    }
+
+    @SneakyThrows
+    public static void cleanDatabase() {
+        initConnection();
+        // Очищаем в порядке ОБРАТНОМ зависимостям (сначала дочерние таблицы)
+        runner.update(connection, "DELETE FROM card_transactions"); // зависит от cards
+        runner.update(connection, "DELETE FROM auth_codes");       // зависит от users
+        runner.update(connection, "DELETE FROM cards");           // зависит от users
+        runner.update(connection, "DELETE FROM users");           // основная таблица (очищаем последней)
+        System.out.println("✅ База данных полностью очищена (в правильном порядке)");
     }
 
     @SneakyThrows

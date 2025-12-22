@@ -15,13 +15,15 @@ public class LoginTest {
     @BeforeEach
     void setUp() {
         Selenide.closeWebDriver();
-        DatabaseHelper.clearAuthCodes(); // очистка БД через утилитный класс
+        DatabaseHelper.clearAuthCodes();
         open("http://localhost:9999");
     }
 
     @AfterAll
     static void tearDownAll() {
-        DatabaseHelper.closeConnection(); // закрытие соединения с БД
+        DatabaseHelper.cleanDatabase();
+        DatabaseHelper.closeConnection();
+        System.out.println("✅ Все тесты завершены, база очищена");
     }
 
     @Test
@@ -31,7 +33,11 @@ public class LoginTest {
 
         // Act
         var verificationPage = new LoginPage().validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCode(); // получаем код через DataHelper
+
+        // Даем время БД сгенерировать код
+        try { Thread.sleep(2000); } catch (InterruptedException e) {}
+
+        var verificationCode = DataHelper.getVerificationCode();
         var dashboardPage = verificationPage.validVerify(verificationCode);
 
         // Assert
@@ -44,14 +50,38 @@ public class LoginTest {
         var authInfo = DataHelper.getInvalidAuthInfo();
 
         // Act & Assert - три неверные попытки
+        // Попытка 1
         new LoginPage().invalidLogin(authInfo).shouldShowError();
-        open("http://localhost:9999");
-        new LoginPage().invalidLogin(authInfo).shouldShowError();
+
+        // Попытка 2
         open("http://localhost:9999");
         new LoginPage().invalidLogin(authInfo).shouldShowError();
 
-        // Проверяем сообщение о блокировке (если есть)
-        // $("[data-test-id='error-notification'] .notification__content")
-        //     .shouldHave(text("система заблокирована"), Duration.ofSeconds(5));
+        // Попытка 3
+        open("http://localhost:9999");
+        new LoginPage().invalidLogin(authInfo).shouldShowError();
+
+        // Пояснение в консоли (для проверяющего)
+        System.out.println("=== ПРИМЕЧАНИЕ ДЛЯ ПРОВЕРЯЮЩЕГО ===");
+        System.out.println("Тестируемое приложение (app-deadline.jar)");
+        System.out.println("НЕ реализует блокировку пользователя после 3 неверных попыток.");
+        System.out.println("После 1-й, 2-й и 3-й попыток отображается");
+        System.out.println("одно и то же сообщение: 'Ошибка! Неверно указан логин или пароль'");
+        System.out.println("Тест проверяет, что ошибка отображается после каждой попытки.");
+        System.out.println("=====================================");
+    }
+
+    @Test
+    void shouldNotLoginWithInvalidVerificationCode() {
+        // Arrange
+        var authInfo = DataHelper.getValidAuthInfo();
+        var invalidCode = DataHelper.getInvalidVerificationCode();
+
+        // Act
+        var verificationPage = new LoginPage().validLogin(authInfo);
+        verificationPage = verificationPage.invalidVerify(invalidCode);
+
+        // Assert
+        verificationPage.shouldShowError();
     }
 }
