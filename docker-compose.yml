@@ -10,4 +10,23 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  sut:
+    image: amazoncorretto:11 # Заменили образ здесь
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "9999:9999"
+    environment:
+      DB_URL: jdbc:mysql://mysql-db:3306/app
+      DB_USER: app
+      DB_PASS: pass
+    volumes:
+      - ./artifacts/app-deadline.jar:/app.jar
+    command: java -jar /app.jar
