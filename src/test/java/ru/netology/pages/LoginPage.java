@@ -39,16 +39,9 @@ public class LoginPage {
         return this;
     }
 
-    // Проверка обычной ошибки (неверный логин/пароль) с КОНКРЕТНЫМ текстом
-    public void shouldShowError() {
-        errorNotification.shouldBe(visible, Duration.ofSeconds(5));
-        // Проверяем ТОЧНЫЙ текст ошибки из вашего приложения
-        errorContent.shouldHave(text("Ошибка! Неверно указан логин или пароль"), Duration.ofSeconds(5));
-    }
 
-    // Проверка сообщения о БЛОКИРОВКЕ системы
-    public void shouldShowBlockedMessage() {
+    public void shouldShowErrorMessage(String expectedText) {
         errorNotification.shouldBe(visible, Duration.ofSeconds(5));
-        errorContent.shouldHave(text("система заблокирована"), Duration.ofSeconds(5));
+        errorContent.shouldHave(text(expectedText), Duration.ofSeconds(5));
     }
 }

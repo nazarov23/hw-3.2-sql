@@ -36,10 +36,9 @@ public class VerificationPage {
         return this;
     }
 
-    // Проверка ошибки с КОНКРЕТНЫМ текстом
-    public void shouldShowError() {
+
+    public void shouldShowErrorMessage(String expectedText) {
         errorNotification.shouldBe(visible, Duration.ofSeconds(5));
-        // Проверяем точный текст ошибки
-        errorContent.shouldHave(text("Ошибка! Неверно указан код! Попробуйте ещё раз."), Duration.ofSeconds(5));
+        errorContent.shouldHave(text(expectedText), Duration.ofSeconds(5));
     }
 }

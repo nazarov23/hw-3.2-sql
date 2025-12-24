@@ -49,7 +49,7 @@ public class DatabaseHelper {
         runner.update(connection, "DELETE FROM auth_codes");       // зависит от users
         runner.update(connection, "DELETE FROM cards");           // зависит от users
         runner.update(connection, "DELETE FROM users");           // основная таблица (очищаем последней)
-        System.out.println("✅ База данных полностью очищена (в правильном порядке)");
+        
     }
 
     @SneakyThrows
